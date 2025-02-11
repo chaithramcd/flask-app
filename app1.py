@@ -1,15 +1,20 @@
 import openai
 import xlwings as xw
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend access
 
 EXCEL_FILE_PATH = r"C:\Pythonprojects2\buildingdata1.xlsx"
 
-# Set your OpenAI API Key
-openai.api_key = "your_openai_api_key"
+# Set OpenAI API Key from .env
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route('/process-input', methods=['POST'])
 def process_input():
@@ -33,7 +38,7 @@ def process_input():
         sheet["D62"].value = no_of_floors_above
         sheet["D63"].value = no_of_floors_below
 
-        # Force recalculation and get result
+        # Force recalculation & fetch result
         workbook.app.calculate()
         result = sheet["D53"].value
 
@@ -42,25 +47,10 @@ def process_input():
         workbook.close()
         app.quit()
 
-        # Send result to ChatGPT for explanation
-        chatgpt_response = get_chatgpt_response(result)
-
-        return jsonify({"result": result, "chatgpt_explanation": chatgpt_response}), 200
+        return jsonify({"result": result}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def get_chatgpt_response(input_value):
-    """Send the Excel result to ChatGPT for explanation."""
-    try:
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=f"The calculated result is {input_value}. Can you explain what it means?",
-            max_tokens=100
-        )
-        return response.choices[0].text.strip()
-    except Exception as e:
-        return f"Error from ChatGPT: {str(e)}"
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
