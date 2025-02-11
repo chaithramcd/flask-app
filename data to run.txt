@@ -1,0 +1,7 @@
+cd C:\Pythonprojects1
+python app1.py
+
+cd C:\Pythonprojects1
+Python chatbot.py
+
+Process building data
